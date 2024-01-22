@@ -1,73 +1,80 @@
-import React, { useState } from 'react';
-import Header from '../Header/Header';
-import TaskList from '../TaskList/TaskList';
-import Footer from '../Footer/Footer';
+import React from "react";
+import Header from "../Header/Header";
+import TaskList from "../TaskList/TaskList";
+import Footer from "../Footer/Footer";
+
 import './App.css';
 
-const App = () => {
-  const [taskData, setTaskData] = useState([
-    { id: 1, status: 'completed', description: 'Completed task', created: 'created 17 seconds ago' },
-    { id: 2, status: 'editing', description: 'Editing task', created: 'created 5 minutes ago' },
-    { id: 3, status: '', description: 'Active task', created: 'created 5 minutes ago' }
-  ]);
-  const [filter, setFilter] = useState('all'); 
+export default class App extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      tasks: [
+        { id: 1, state: 'completed', description: 'Completed task', created: 'created 17 seconds ago' },
+        { id: 2, state: 'active', description: 'Editing task', created: 'created 5 minutes ago' },
+        { id: 3, state: 'active', description: 'Active task', created: 'created 5 minutes ago' }
+      ]
+    };
+  }
 
-  const editTask = (id) => {
-    setTaskData((prevTaskData) => {
-      const updatedTaskData = prevTaskData.map((item) => {
-        if (item.id === id) {
-          const taskStatus = item.status === 'completed' ? '' : 'completed';
-          return { ...item, status: taskStatus };
-        }
-        return item;
-      });
-      return updatedTaskData;
-    });
-  };
+  changeTaskContent = (id, newState) => {
+    this.setState(({tasks}) => {
+        const taskDataLeft = tasks.map((item) => {
+            if (item.id === id) {
+                return newState(item)
+            }
+            return item
+        })
+        return {tasks: taskDataLeft}
+    })
+}
+onEditTask = (id, text) => {
+    this.changeTaskContent((id), (item) => {
+        const taskDescription = text
+        const taskStatus = 'active'
+        return {...item, state: taskStatus, description: taskDescription}
+    })
+}
+onUpdateStatusTask= (id) => {
+    this.changeTaskContent(id, (item) => {
+        const taskStatus = 'editing'
+        return {...item, state: taskStatus}
+    })
+}
 
-  const deleteTask = (id) => {
-    setTaskData((prevTaskData) => {
-      const updatedTaskData = prevTaskData.filter((item) => item.id !== id);
-      return updatedTaskData;
-    });
-  };
-
-  const addTask = (newTask) => {
-    setTaskData((prevTaskData) => [...prevTaskData, { id: prevTaskData.length + 1, ...newTask }]);
-  };
-
-  const handleFilterChange = (selectedFilter) => {
-    setFilter(selectedFilter);
-  };
-
-  const deleteCompletedTasks = () => {
-    setTaskData((prevTaskData) => prevTaskData.filter((task) => task.status !== 'completed'));
-  };
-
-
-  
-  const filteredTasks = taskData.filter((task) => {
-    if (filter === 'active') {
-      return task.status !== 'completed';
-    } else if (filter === 'completed') {
-      return task.status === 'completed';
-    }
-    return true;
+onToggleTaskStatus = (id) => {
+  this.changeTaskContent(id, (item) => {
+    const taskStatus = item.state === 'completed' ? 'active' : 'completed';
+    return { ...item, state: taskStatus };
   });
+}
 
-  return (
-    <section className="todoapp">
-      <Header onAddTask={addTask} />
-      <section className="main">
-        <TaskList taskData={filteredTasks}
-          onChange={editTask}
-          onDelete={deleteTask} />
-        <Footer onFilterChange={handleFilterChange}
-          onDeleteCompleted={deleteCompletedTasks}
-          activeTasksCount={filteredTasks.filter((task) => task.status !== 'completed').length} />
+
+onDeleteTask = (id) => {
+    this.setState(({tasks}) => {
+        const taskItemsLeft = tasks.filter((item) => item.id !== id);
+        return {tasks: taskItemsLeft};
+    })
+}
+
+  render() {
+    return (
+      <section className="todoapp">
+        <Header />
+        <section className="main">
+          <TaskList
+            taskData={this.state.tasks}
+            onToggle={this.onToggleTaskStatus}
+            onDelete={this.onDeleteTask}
+            onUpdateStatusTask={this.onUpdateStatusTask}
+            onEditTask={this.onEditTask}
+          />
+          <Footer />
+        </section>
       </section>
-    </section>
-  );
-};
+    );
+  }
+}
 
-export default App;
+
+
